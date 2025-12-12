@@ -286,18 +286,55 @@
 
             <!-- Reports Tab -->
             <div id="reports" class="tab-content">
-                <h2>Waste Collection Reports</h2>
+                <h2>Waste Collection Management</h2>
+                <div class="alert alert-success" id="reportSuccess"></div>
                 <div class="alert alert-error" id="reportError"></div>
 
+                <!-- Add Collection Event Form -->
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                    <h3 style="color: #00274C; margin-bottom: 15px;">Add Collection Event</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Collection ID</label>
+                            <input type="number" id="collectionId" placeholder="Enter collection ID">
+                        </div>
+                        <div class="form-group">
+                            <label>Building Name</label>
+                            <input type="text" id="buildingName" placeholder="Enter building name">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Collection Date</label>
+                            <input type="date" id="collectionDate">
+                        </div>
+                        <div class="form-group">
+                            <label>Weight (kg)</label>
+                            <input type="number" step="0.01" id="collectionWeight" placeholder="Enter weight in kg">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="addCollectionEvent()">Add Collection Event</button>
+                </div>
+
+                <!-- Collection Events List -->
+                <h3 style="color: #00274C; margin-bottom: 15px;">Collection Events</h3>
+                <div id="collectionEventsList" class="loading">Loading collection events...</div>
+
+                <!-- Aggregated Report -->
+                <h3 style="color: #00274C; margin-top: 40px; margin-bottom: 15px;">📊 Aggregated Report - Total Waste Per Building Per Day</h3>
                 <div class="stats-grid" id="reportStats"></div>
                 <div id="reportData" class="loading">Loading reports...</div>
+
+                <!-- Daily Aggregate Report -->
+                <h3 style="color: #00274C; margin-top: 40px; margin-bottom: 15px;">📅 Daily Aggregate - Total Waste Across All Buildings Per Day</h3>
+                <div id="dailyReportData" class="loading">Loading daily report...</div>
             </div>
 
             <!-- Departments Tab -->
-            <!-- <div id="departments" class="tab-content">
+            <div id="departments" class="tab-content">
                 <h2>Departments</h2>
                 <div id="departmentList" class="loading">Loading departments...</div>
-            </div> -->
+            </div>
         </div>
     </div>
 
@@ -518,6 +555,132 @@
 
         // Reports Functions
         async function loadReports() {
+            await loadCollectionEvents();
+            await loadAggregatedReport();
+            await loadDailyReport();
+        }
+
+        async function loadCollectionEvents() {
+            try {
+                const response = await fetch('/api/collection-events');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const html = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Collection ID</th>
+                                    <th>Building Name</th>
+                                    <th>Date</th>
+                                    <th>Weight (kg)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${result.data.length === 0 ? 
+                                    '<tr><td colspan="5" style="text-align: center;">No collection events found. Add one above!</td></tr>' :
+                                    result.data.map(event => `
+                                        <tr>
+                                            <td>${event.id}</td>
+                                            <td>${event.building}</td>
+                                            <td>${event.date}</td>
+                                            <td>${event.weight.toFixed(2)}</td>
+                                            <td>
+                                                <button class="btn btn-danger" onclick="deleteCollectionEvent(${event.id})">Delete</button>
+                                            </td>
+                                        </tr>
+                                    `).join('')
+                                }
+                            </tbody>
+                        </table>
+                    `;
+                    document.getElementById('collectionEventsList').innerHTML = html;
+                } else {
+                    document.getElementById('collectionEventsList').innerHTML = '<p>Error loading collection events</p>';
+                }
+            } catch (error) {
+                document.getElementById('collectionEventsList').innerHTML = '<p>Error loading collection events</p>';
+            }
+        }
+
+        async function addCollectionEvent() {
+            const collectionId = document.getElementById('collectionId').value;
+            const buildingName = document.getElementById('buildingName').value;
+            const collectionDate = document.getElementById('collectionDate').value;
+            const collectionWeight = document.getElementById('collectionWeight').value;
+
+            console.log('Form values:', {collectionId, buildingName, collectionDate, collectionWeight});
+
+            if (!collectionId || !buildingName || !collectionDate || !collectionWeight) {
+                console.error('Missing fields');
+                showAlert('reportError', 'Please fill in all fields', 'error');
+                return;
+            }
+
+            const payload = {
+                collectionId: parseInt(collectionId),
+                buildingName,
+                collectionDate,
+                collectionWeight: parseFloat(collectionWeight)
+            };
+
+            console.log('Sending payload:', payload);
+
+            try {
+                console.log('Making fetch request...');
+                const response = await fetch('/api/collection-events', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                const result = await response.json();
+                console.log('Response body:', result);
+
+                if (result.success) {
+                    showAlert('reportSuccess', 'Collection event added successfully!');
+                    document.getElementById('collectionId').value = '';
+                    document.getElementById('buildingName').value = '';
+                    document.getElementById('collectionDate').value = '';
+                    document.getElementById('collectionWeight').value = '';
+                    console.log('Reloading reports...');
+                    loadReports();
+                } else {
+                    console.error('Error from server:', result.error);
+                    showAlert('reportError', result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showAlert('reportError', 'Error adding collection event: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteCollectionEvent(id) {
+            if (!confirm('Are you sure you want to delete this collection event?')) return;
+
+            try {
+                const response = await fetch(`/api/collection-events/${id}`, { 
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('reportSuccess', 'Collection event deleted successfully!');
+                    loadReports();
+                } else {
+                    showAlert('reportError', 'Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showAlert('reportError', 'Error deleting collection event: ' + error.message, 'error');
+            }
+        }
+
+        async function loadAggregatedReport() {
             try {
                 const response = await fetch('/api/reports/building-waste');
                 const result = await response.json();
@@ -525,6 +688,7 @@
                 if (result.success) {
                     // Stats
                     const uniqueBuildings = new Set(result.data.map(d => d.building)).size;
+                    const uniqueDates = new Set(result.data.map(d => d.date)).size;
                     const statsHtml = `
                         <div class="stat-card">
                             <div class="stat-value">${result.data.length}</div>
@@ -533,6 +697,10 @@
                         <div class="stat-card">
                             <div class="stat-value">${uniqueBuildings}</div>
                             <div class="stat-label">Buildings</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${uniqueDates}</div>
+                            <div class="stat-label">Collection Days</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">${result.grandTotal.toFixed(2)} kg</div>
@@ -552,17 +720,22 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${result.data.map(item => `
-                                    <tr>
-                                        <td>${item.building}</td>
-                                        <td>${item.date}</td>
-                                        <td>${item.total.toFixed(3)}</td>
+                                ${result.data.length === 0 ? 
+                                    '<tr><td colspan="3" style="text-align: center;">No data available. Add collection events above to see aggregated results.</td></tr>' :
+                                    result.data.map(item => `
+                                        <tr>
+                                            <td>${item.building}</td>
+                                            <td>${item.date}</td>
+                                            <td>${item.total.toFixed(3)}</td>
+                                        </tr>
+                                    `).join('')
+                                }
+                                ${result.data.length > 0 ? `
+                                    <tr style="font-weight: bold; background: #00274C; color: white;">
+                                        <td colspan="2">GRAND TOTAL</td>
+                                        <td>${result.grandTotal.toFixed(3)}</td>
                                     </tr>
-                                `).join('')}
-                                <tr style="font-weight: bold; background: #f0f0f0;">
-                                    <td colspan="2">GRAND TOTAL</td>
-                                    <td>${result.grandTotal.toFixed(3)}</td>
-                                </tr>
+                                ` : ''}
                             </tbody>
                         </table>
                     `;
@@ -572,6 +745,48 @@
                 }
             } catch (error) {
                 document.getElementById('reportData').innerHTML = '<p>Error loading reports</p>';
+            }
+        }
+
+        async function loadDailyReport() {
+            try {
+                const response = await fetch('/api/reports/daily-waste');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const html = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Collection Date</th>
+                                    <th>Total Waste Across All Buildings (kg)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${result.data.length === 0 ? 
+                                    '<tr><td colspan="2" style="text-align: center;">No data available. Add collection events to see daily totals.</td></tr>' :
+                                    result.data.map(item => `
+                                        <tr>
+                                            <td>${item.date}</td>
+                                            <td>${item.total.toFixed(3)}</td>
+                                        </tr>
+                                    `).join('')
+                                }
+                                ${result.data.length > 0 ? `
+                                    <tr style="font-weight: bold; background: #FFCB05; color: #00274C;">
+                                        <td>GRAND TOTAL (All Days)</td>
+                                        <td>${result.grandTotal.toFixed(3)}</td>
+                                    </tr>
+                                ` : ''}
+                            </tbody>
+                        </table>
+                    `;
+                    document.getElementById('dailyReportData').innerHTML = html;
+                } else {
+                    document.getElementById('dailyReportData').innerHTML = '<p>Error loading daily report</p>';
+                }
+            } catch (error) {
+                document.getElementById('dailyReportData').innerHTML = '<p>Error loading daily report</p>';
             }
         }
 
