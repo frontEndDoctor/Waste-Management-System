@@ -248,6 +248,7 @@
 
         <div class="tabs">
             <button class="tab active" onclick="openTab('waste')">Waste Types</button>
+            <button class="tab" onclick="openTab('bins')">Bins</button>
             <button class="tab" onclick="openTab('staff')">Staff</button>
             <button class="tab" onclick="openTab('reports')">Reports</button>
             <!-- <button class="tab" onclick="openTab('departments')">Departments</button> -->
@@ -275,11 +276,75 @@
                 <div id="wasteList" class="loading">Loading waste types...</div>
             </div>
 
+            <!-- Bins Tab -->
+            <div id="bins" class="tab-content">
+                <h2>Manage Collection Bins</h2>
+                <div class="alert alert-success" id="binSuccess"></div>
+                <div class="alert alert-error" id="binError"></div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Bin ID</label>
+                        <input type="number" id="binId" placeholder="Enter bin ID">
+                    </div>
+                    <div class="form-group">
+                        <label>Bin Location</label>
+                        <input type="text" id="binLocation" placeholder="e.g., Ground Floor Lobby">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Building Name</label>
+                        <select id="binBuildingName">
+                            <option value="">Select Building</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Waste Type</label>
+                        <select id="binWasteType">
+                            <option value="">Select Waste Type</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="addBin()">Add Bin</button>
+
+                <div id="binList" class="loading">Loading bins...</div>
+            </div>
+
             <!-- Staff Tab -->
             <div id="staff" class="tab-content">
                 <h2>Manage Staff</h2>
                 <div class="alert alert-success" id="staffSuccess"></div>
                 <div class="alert alert-error" id="staffError"></div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Staff ID</label>
+                        <input type="number" id="newStaffId" placeholder="Enter staff ID">
+                    </div>
+                    <div class="form-group">
+                        <label>Staff Name</label>
+                        <input type="text" id="newStaffName" placeholder="Enter staff name">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Current Shift</label>
+                        <select id="newStaffShift">
+                            <option value="">Select Shift</option>
+                            <option value="Morning">Morning</option>
+                            <option value="Afternoon">Afternoon</option>
+                            <option value="Night">Night</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Building Name</label>
+                        <select id="newStaffBuilding">
+                            <option value="">Select Building</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="addStaff()">Add Staff</button>
 
                 <div id="staffList" class="loading">Loading staff...</div>
             </div>
@@ -299,18 +364,34 @@
                             <input type="number" id="collectionId" placeholder="Enter collection ID">
                         </div>
                         <div class="form-group">
-                            <label>Building Name</label>
-                            <input type="text" id="buildingName" placeholder="Enter building name">
+                            <label>Collection Date</label>
+                            <input type="date" id="collectionDate">
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Collection Date</label>
-                            <input type="date" id="collectionDate">
+                            <label>Weight (kg)</label>
+                            <input type="number" step="0.001" id="collectionWeight" placeholder="Enter weight in kg">
                         </div>
                         <div class="form-group">
-                            <label>Weight (kg)</label>
-                            <input type="number" step="0.01" id="collectionWeight" placeholder="Enter weight in kg">
+                            <label>Bin ID</label>
+                            <select id="binId">
+                                <option value="">Select Bin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Staff ID</label>
+                            <select id="staffId">
+                                <option value="">Select Staff</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Building Name</label>
+                            <select id="buildingNameSelect">
+                                <option value="">Select Building</option>
+                            </select>
                         </div>
                     </div>
                     <button class="btn btn-primary" onclick="addCollectionEvent()">Add Collection Event</button>
@@ -321,20 +402,20 @@
                 <div id="collectionEventsList" class="loading">Loading collection events...</div>
 
                 <!-- Aggregated Report -->
-                <h3 style="color: #00274C; margin-top: 40px; margin-bottom: 15px;">📊 Aggregated Report - Total Waste Per Building Per Day</h3>
+                <h3 style="color: #00274C; margin-top: 40px; margin-bottom: 15px;">📊 Daily Aggregated Report - Total Waste Per Building Per Day</h3>
                 <div class="stats-grid" id="reportStats"></div>
                 <div id="reportData" class="loading">Loading reports...</div>
 
-                <!-- Daily Aggregate Report -->
+                <!-- Daily Aggregate Report
                 <h3 style="color: #00274C; margin-top: 40px; margin-bottom: 15px;">📅 Daily Aggregate - Total Waste Across All Buildings Per Day</h3>
-                <div id="dailyReportData" class="loading">Loading daily report...</div>
+                <div id="dailyReportData" class="loading">Loading daily report...</div> -->
             </div>
 
             <!-- Departments Tab -->
-            <div id="departments" class="tab-content">
+            <!-- <div id="departments" class="tab-content">
                 <h2>Departments</h2>
                 <div id="departmentList" class="loading">Loading departments...</div>
-            </div>
+            </div> -->
         </div>
     </div>
 
@@ -352,6 +433,7 @@
 
             // Load data when tab is opened
             if (tabName === 'waste') loadWaste();
+            if (tabName === 'bins') loadBins();
             if (tabName === 'staff') loadStaff();
             if (tabName === 'reports') loadReports();
             if (tabName === 'departments') loadDepartments();
@@ -463,6 +545,129 @@
             }
         }
 
+        // Bins Functions
+        async function loadBins() {
+            try {
+                const response = await fetch('/api/bins');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const html = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Bin ID</th>
+                                    <th>Location</th>
+                                    <th>Building</th>
+                                    <th>Waste Type ID</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${result.data.map(bin => `
+                                    <tr>
+                                        <td>${bin.id}</td>
+                                        <td>${bin.location || 'N/A'}</td>
+                                        <td>${bin.building || 'N/A'}</td>
+                                        <td>${bin.wasteTypeId || 'N/A'}</td>
+                                        <td>
+                                            <button class="btn btn-danger" onclick="deleteBin(${bin.id})">Delete</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                    document.getElementById('binList').innerHTML = html;
+                } else {
+                    document.getElementById('binList').innerHTML = '<p>Error loading bins</p>';
+                }
+            } catch (error) {
+                document.getElementById('binList').innerHTML = '<p>Error loading bins</p>';
+            }
+
+            // Load waste types and buildings for dropdowns
+            try {
+                const wasteResponse = await fetch('/api/waste');
+                const wasteResult = await wasteResponse.json();
+                if (wasteResult.success) {
+                    const wasteSelect = document.getElementById('binWasteType');
+                    wasteSelect.innerHTML = '<option value="">Select Waste Type</option>' + 
+                        wasteResult.data.map(waste => `<option value="${waste.id}">${waste.name} (ID: ${waste.id})</option>`).join('');
+                }
+
+                const buildingsResponse = await fetch('/api/buildings');
+                const buildingsResult = await buildingsResponse.json();
+                if (buildingsResult.success) {
+                    const buildingSelect = document.getElementById('binBuildingName');
+                    buildingSelect.innerHTML = '<option value="">Select Building</option>' + 
+                        buildingsResult.data.map(building => `<option value="${building.name}">${building.name}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading dropdowns:', error);
+            }
+        }
+
+        async function addBin() {
+            const binId = document.getElementById('binId').value;
+            const binLocation = document.getElementById('binLocation').value;
+            const binBuildingName = document.getElementById('binBuildingName').value;
+            const binWasteType = document.getElementById('binWasteType').value;
+
+            if (!binId || !binLocation || !binBuildingName || !binWasteType) {
+                showAlert('binError', 'Please fill in all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/bins', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        binId: parseInt(binId),
+                        binLocation,
+                        buildingName: binBuildingName,
+                        wasteTypeId: parseInt(binWasteType)
+                    })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('binSuccess', 'Bin added successfully!');
+                    document.getElementById('binId').value = '';
+                    document.getElementById('binLocation').value = '';
+                    document.getElementById('binBuildingName').value = '';
+                    document.getElementById('binWasteType').value = '';
+                    loadBins();
+                } else {
+                    showAlert('binError', result.error, 'error');
+                }
+            } catch (error) {
+                showAlert('binError', 'Error adding bin', 'error');
+            }
+        }
+
+        async function deleteBin(id) {
+            if (!confirm('Are you sure you want to delete this bin?')) return;
+
+            try {
+                const response = await fetch(`/api/bins/${id}`, { 
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('binSuccess', 'Bin deleted successfully!');
+                    loadBins();
+                } else {
+                    showAlert('binError', 'Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showAlert('binError', 'Error deleting bin: ' + error.message, 'error');
+            }
+        }
+
         // Staff Functions
         async function loadStaff() {
             try {
@@ -476,20 +681,27 @@
                                 <tr>
                                     <th>Staff ID</th>
                                     <th>Staff Name</th>
+                                    <th>Shift</th>
+                                    <th>Building</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${result.data.map(staff => `
-                                    <tr>
-                                        <td>${staff.id}</td>
-                                        <td id="staffName_${staff.id}">${staff.name}</td>
-                                        <td>
-                                            <button class="btn btn-update" onclick="updateStaffPrompt(${staff.id})">Update</button>
-                                            <button class="btn btn-danger" onclick="deleteStaff(${staff.id})">Delete</button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
+                                ${result.data.length === 0 ? 
+                                    '<tr><td colspan="5" style="text-align: center;">No staff found. Add staff members above!</td></tr>' :
+                                    result.data.map(staff => `
+                                        <tr>
+                                            <td>${staff.id}</td>
+                                            <td>${staff.name}</td>
+                                            <td>${staff.shift || 'N/A'}</td>
+                                            <td>${staff.building || 'N/A'}</td>
+                                            <td>
+                                                <button class="btn btn-update" onclick="updateStaffPrompt(${staff.id})">Update</button>
+                                                <button class="btn btn-danger" onclick="deleteStaff(${staff.id})">Delete</button>
+                                            </td>
+                                        </tr>
+                                    `).join('')
+                                }
                             </tbody>
                         </table>
                     `;
@@ -497,8 +709,112 @@
                 } else {
                     document.getElementById('staffList').innerHTML = '<p>Error loading staff</p>';
                 }
+
+                // Load buildings for dropdown
+                try {
+                    const buildingsResponse = await fetch('/api/buildings');
+                    const buildingsResult = await buildingsResponse.json();
+                    if (buildingsResult.success) {
+                        const buildingSelect = document.getElementById('newStaffBuilding');
+                        buildingSelect.innerHTML = '<option value="">Select Building</option>' + 
+                            buildingsResult.data.map(building => `<option value="${building.name}">${building.name}</option>`).join('');
+                    }
+                } catch (error) {
+                    console.error('Error loading buildings:', error);
+                }
             } catch (error) {
+                console.error('Error loading staff:', error);
                 document.getElementById('staffList').innerHTML = '<p>Error loading staff</p>';
+            }
+        }
+
+        async function addStaff() {
+            const staffId = document.getElementById('newStaffId').value;
+            const staffName = document.getElementById('newStaffName').value;
+            const staffShift = document.getElementById('newStaffShift').value;
+            const staffBuilding = document.getElementById('newStaffBuilding').value;
+
+            if (!staffId || !staffName || !staffShift || !staffBuilding) {
+                showAlert('staffError', 'Please fill in all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/staff', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        staffId: parseInt(staffId),
+                        staffName,
+                        currentShift: staffShift,
+                        buildingName: staffBuilding
+                    })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('staffSuccess', 'Staff added successfully!');
+                    document.getElementById('newStaffId').value = '';
+                    document.getElementById('newStaffName').value = '';
+                    document.getElementById('newStaffShift').value = '';
+                    document.getElementById('newStaffBuilding').value = '';
+                    loadStaff();
+                } else {
+                    showAlert('staffError', result.error, 'error');
+                }
+            } catch (error) {
+                showAlert('staffError', 'Error adding staff', 'error');
+            }
+        }
+
+        async function updateStaffPrompt(staffId) {
+            const newName = prompt('Enter new staff name:');
+            if (!newName) return;
+
+            try {
+                const response = await fetch(`/api/staff/${staffId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ staffName: newName })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('staffSuccess', 'Staff updated successfully!');
+                    loadStaff();
+                } else {
+                    showAlert('staffError', result.error, 'error');
+                }
+            } catch (error) {
+                showAlert('staffError', 'Error updating staff', 'error');
+            }
+        }
+
+        async function deleteStaff(staffId) {
+            if (!confirm('Are you sure you want to delete this staff member?')) return;
+
+            try {
+                console.log('Deleting staff ID:', staffId);
+                const response = await fetch(`/api/staff/${staffId}`, { 
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                const result = await response.json();
+                console.log('Result:', result);
+
+                if (result.success) {
+                    showAlert('staffSuccess', 'Staff member deleted successfully!');
+                    loadStaff();
+                } else {
+                    showAlert('staffError', 'Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                showAlert('staffError', 'Error deleting staff: ' + error.message, 'error');
             }
         }
 
@@ -555,9 +871,55 @@
 
         // Reports Functions
         async function loadReports() {
+            await loadDropdowns();
             await loadCollectionEvents();
             await loadAggregatedReport();
             await loadDailyReport();
+        }
+
+        async function loadDropdowns() {
+            // Load bins
+            try {
+                const binsResponse = await fetch('/api/bins');
+                const binsResult = await binsResponse.json();
+                if (binsResult.success) {
+                    const binSelect = document.getElementById('binId');
+                    binSelect.innerHTML = '<option value="">Select Bin</option>' + 
+                        binsResult.data.map(bin => 
+                            `<option value="${bin.id}">Bin ${bin.id} - ${bin.location} (${bin.building})</option>`
+                        ).join('');
+                }
+            } catch (error) {
+                console.error('Error loading bins:', error);
+            }
+
+            // Load staff
+            try {
+                const staffResponse = await fetch('/api/staff');
+                const staffResult = await staffResponse.json();
+                if (staffResult.success) {
+                    const staffSelect = document.getElementById('staffId');
+                    staffSelect.innerHTML = '<option value="">Select Staff</option>' + 
+                        staffResult.data.map(staff => 
+                            `<option value="${staff.id}">${staff.name} - ${staff.shift} (${staff.building})</option>`
+                        ).join('');
+                }
+            } catch (error) {
+                console.error('Error loading staff:', error);
+            }
+
+            // Load buildings
+            try {
+                const buildingsResponse = await fetch('/api/buildings');
+                const buildingsResult = await buildingsResponse.json();
+                if (buildingsResult.success) {
+                    const buildingSelect = document.getElementById('buildingNameSelect');
+                    buildingSelect.innerHTML = '<option value="">Select Building</option>' + 
+                        buildingsResult.data.map(building => `<option value="${building.name}">${building.name}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading buildings:', error);
+            }
         }
 
         async function loadCollectionEvents() {
@@ -571,21 +933,25 @@
                             <thead>
                                 <tr>
                                     <th>Collection ID</th>
-                                    <th>Building Name</th>
                                     <th>Date</th>
                                     <th>Weight (kg)</th>
+                                    <th>Bin ID</th>
+                                    <th>Staff ID</th>
+                                    <th>Building</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${result.data.length === 0 ? 
-                                    '<tr><td colspan="5" style="text-align: center;">No collection events found. Add one above!</td></tr>' :
+                                    '<tr><td colspan="7" style="text-align: center;">No collection events found. Add one above!</td></tr>' :
                                     result.data.map(event => `
                                         <tr>
                                             <td>${event.id}</td>
-                                            <td>${event.building}</td>
                                             <td>${event.date}</td>
-                                            <td>${event.weight.toFixed(2)}</td>
+                                            <td>${event.weight.toFixed(3)}</td>
+                                            <td>${event.binId}</td>
+                                            <td>${event.staffId}</td>
+                                            <td>${event.building}</td>
                                             <td>
                                                 <button class="btn btn-danger" onclick="deleteCollectionEvent(${event.id})">Delete</button>
                                             </td>
@@ -606,13 +972,15 @@
 
         async function addCollectionEvent() {
             const collectionId = document.getElementById('collectionId').value;
-            const buildingName = document.getElementById('buildingName').value;
             const collectionDate = document.getElementById('collectionDate').value;
             const collectionWeight = document.getElementById('collectionWeight').value;
+            const binId = document.getElementById('binId').value;
+            const staffId = document.getElementById('staffId').value;
+            const buildingName = document.getElementById('buildingNameSelect').value;
 
-            console.log('Form values:', {collectionId, buildingName, collectionDate, collectionWeight});
+            console.log('Form values:', {collectionId, collectionDate, collectionWeight, binId, staffId, buildingName});
 
-            if (!collectionId || !buildingName || !collectionDate || !collectionWeight) {
+            if (!collectionId || !collectionDate || !collectionWeight || !binId || !staffId || !buildingName) {
                 console.error('Missing fields');
                 showAlert('reportError', 'Please fill in all fields', 'error');
                 return;
@@ -620,9 +988,11 @@
 
             const payload = {
                 collectionId: parseInt(collectionId),
-                buildingName,
                 collectionDate,
-                collectionWeight: parseFloat(collectionWeight)
+                collectionWeight: parseFloat(collectionWeight),
+                binId: parseInt(binId),
+                staffId: parseInt(staffId),
+                buildingName
             };
 
             console.log('Sending payload:', payload);
@@ -644,9 +1014,11 @@
                 if (result.success) {
                     showAlert('reportSuccess', 'Collection event added successfully!');
                     document.getElementById('collectionId').value = '';
-                    document.getElementById('buildingName').value = '';
                     document.getElementById('collectionDate').value = '';
                     document.getElementById('collectionWeight').value = '';
+                    document.getElementById('binId').value = '';
+                    document.getElementById('staffId').value = '';
+                    document.getElementById('buildingNameSelect').value = '';
                     console.log('Reloading reports...');
                     loadReports();
                 } else {
