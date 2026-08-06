@@ -84,7 +84,7 @@ The system enables Planet Blue to monitor waste collection activities, analyze w
 
 ## ER Diagram
 
-```mermaid
+mermaid
 erDiagram
 
     STAFF {
@@ -145,7 +145,7 @@ Stores information about employees responsible for building assignments and wast
 | staffID   | Unique identifier for staff member |
 | staffName | Staff member's name                |
 
----
+
 
 ### Building
 
@@ -162,8 +162,6 @@ Relationship:
 
 * Each building is assigned to a staff member.
 * A staff member may manage multiple buildings.
-
----
 
 ### Waste
 
